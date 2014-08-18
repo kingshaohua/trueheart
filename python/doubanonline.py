@@ -1,6 +1,10 @@
 import sys,os,time,thread,ConfigParser,traceback
+import json, urllib, httplib, contextlib, random, binascii, calendar
+from select import select
 from contextlib import closing
 from dateutil import parser
+from Cookie import SimpleCookie
+import pickle
 
 class Cache:
     """docstring for cache"""
@@ -34,6 +38,7 @@ class DoubanOnline:
         self.config = ConfigParser.ConfigParser()
         self.dispatch_dic = {'get_captcha':lambda:self.do_get_captcha()}
         self.init_cookie()
+        self.data={}
         try:
             thread.start_new_thread(self.dispatch,())
         except:
@@ -66,8 +71,8 @@ class DoubanOnline:
                 self.cookie[key] = cookie[key]
 
 
-    def do_get_captcha(self,path = "/j/new_captcha"):
-        print "do_get_captcha"
+    def do_get_captcha(self,path = "http://douban.fm/j/new_captcha"):
+        print "do_get_captcha:path="+path
         try:
             with closing(self.get_fm_conn()) as conn:
                 headers = self.get_headers_for_request()
@@ -81,17 +86,20 @@ class DoubanOnline:
                 if response.status == 302:
                     print '...'
                     redirect_url = response.getheader('location')
-                    self.do_get_captcha(redirect_url)
+                    return self.do_get_captcha(redirect_url)
                 if response.status == 200:
                     body = response.read()
-                    self.data['captcha_id'] = body.strip('"')
+                    captcha_id = body.strip('"')
+                    self.data['captcha_id'] = captcha_id
+                    self.data['captcha_file'] = self.get_captcha_image(captcha_id)
         except Exception,e:
             print e
             print traceback.format_exc()
 
     def get_captcha_image(self,captcha_id):
+        print 'get_captcha_image:'+captcha_id
         with closing(self.get_fm_conn()) as conn:
-            path = "/misc/captcha?size=m&id=" + captcha_id
+            path = "http://douban.fm/misc/captcha?size=m&id=" + captcha_id
 
             import cStringIO
 
@@ -110,14 +118,22 @@ class DoubanOnline:
                 from PIL import Image
                 f = cStringIO.StringIO(body)
                 img = Image.open(f)
-                img.show();
+                img.save('E:\github\kingshaohau\trueheart\python\1.jpg');
+                print 'save ok'
 
+    # todo XcCookie.get_request_string()
+    def get_cookie_for_request(self):
+        cookie_segments = []
+        for key in self.cookie:
+            cookie_segment = key + '="' + self.cookie[key].value + '"'
+            cookie_segments.append(cookie_segment)
+        return '; '.join(cookie_segments)
 
     def fill_dispach_result():
         pass
 
     def get_fm_conn(self):
-        return httplib.HTTPConnection("douban.fm")
+        return httplib.HTTPConnection("10.64.8.8", "8080")
 
 
     def get_headers_for_request(self, extra = {}):
@@ -139,6 +155,13 @@ class DoubanOnline:
 
     def login(self,username,password):
         print u'login...'
+        data = {
+                'source': 'radio',
+                'alias': username, 
+                'form_password': password,
+                'remember': 'on',
+                'task': 'sync_channel_list'
+                }
 
     def reload_cfg(self):
         while 1:
