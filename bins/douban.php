@@ -1,0 +1,28 @@
+<?php
+    $action = $_REQUEST['action'];
+    $doubancli = 'python doubancli.py ';
+    try {
+        switch ($action) {
+            case 'get_captcha':
+            case 'is_login':
+            case 'skip_song':
+                exec($doubancli.$action,$out,$states);
+                print $out[0];
+                break;
+            case 'login':
+                exec($doubancli.'set_auth '.
+                ' '.$_REQUEST['username'].
+                ' '.$_REQUEST['password'].
+                ' '.$_REQUEST['captcha']);
+                exec($doubancli.$action,$out,$states);
+                print $out[0];
+                break;
+            default:
+                # code...
+                break;
+        }
+    } catch (Exception $e) {
+        echo $e->getMessage();
+    }
+
+?>

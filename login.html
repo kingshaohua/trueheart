@@ -22,7 +22,17 @@
 
     <!-- Custom Fonts -->
     <link href="font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <!-- jQuery Version 1.11.0 -->
+    <script src="js/jquery-1.11.0.js"></script>
 
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="js/plugins/metisMenu/metisMenu.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="js/sb-admin-2.js"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -31,6 +41,51 @@
     <![endif]-->
 
 </head>
+<script type="text/javascript">
+$(document).ready(function(){
+    refresh_captcha();
+    $('#captcha').click(function() {
+        refresh_captcha();
+    });
+    $('#login').click(function(){
+        login();
+    });
+})
+
+function refresh_captcha(){
+    $.post("bins/douban.php",{action:"get_captcha"},
+        function(data){
+            var json_data = $.parseJSON(data);
+            if(json_data['code'] == 0){
+                var append = '?' + new Date().getTime() + 'a' + Math.random();
+                $('#captcha').attr('src','bins/captcha.jpg' + append);
+            }else{
+                alert(json_data['data']);
+            }
+            
+        }
+    );
+}
+function login(){
+    $.post("bins/douban.php",{action:"login",
+        username:$('#username').val(),
+        password:$('#password').val(),
+        captcha:$('#captcha_value').val()},
+        function(data){
+            var json_data=$.parseJSON(data);
+            if(0 != json_data['code']){
+                //login failed.
+                alert(json_data['data']);
+                refresh_captcha();
+            }else{
+               location.href = "index.html"; 
+            }
+        }
+    );
+}
+
+
+</script>
 
 <body>
 
@@ -45,10 +100,16 @@
                         <form role="form">
                             <fieldset>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="E-mail" name="email" type="email" autofocus>
+                                    <input id='username' class="form-control" placeholder="E-mail" name="email" type="email" autofocus>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="password" type="password" value="">
+                                    <input id='password' class="form-control" placeholder="Password" name="password" type="password" value="">
+                                </div>
+                                <div class="form-group">
+                                    <input id='captcha_value' class="form-control" placeholder="Verification" name="verification" type="verification" value="">
+                                </div>
+                                <div class="form-group">
+                                    <image id="captcha" src='bins/captcha_load.gif'></image>
                                 </div>
                                 <div class="checkbox">
                                     <label>
@@ -56,7 +117,7 @@
                                     </label>
                                 </div>
                                 <!-- Change this to a button or input when using this as a form -->
-                                <a href="index.html" class="btn btn-lg btn-success btn-block">Login</a>
+                                <a href="#" id='login' class="btn btn-lg btn-success btn-block">Login</a>
                             </fieldset>
                         </form>
                     </div>
@@ -65,17 +126,7 @@
         </div>
     </div>
 
-    <!-- jQuery Version 1.11.0 -->
-    <script src="js/jquery-1.11.0.js"></script>
 
-    <!-- Bootstrap Core JavaScript -->
-    <script src="js/bootstrap.min.js"></script>
-
-    <!-- Metis Menu Plugin JavaScript -->
-    <script src="js/plugins/metisMenu/metisMenu.min.js"></script>
-
-    <!-- Custom Theme JavaScript -->
-    <script src="js/sb-admin-2.js"></script>
 
 </body>
 
