@@ -6,6 +6,9 @@
             case 'get_captcha':
             case 'is_login':
             case 'skip_song':
+            case 'fav_song':
+            case 'unfav_song':
+            case 'del_song':
                 exec($doubancli.$action,$out,$states);
                 print $out[0];
                 break;

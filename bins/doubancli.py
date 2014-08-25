@@ -174,13 +174,17 @@ class DoubanCLI(object):
         params['sid'] = self.cur_song['sid']
         params['aid'] = self.cur_song['aid']
         result = self.communicate(params)
+        self.cur_song['like']=1
         self.deal_new_songlist(result['song'])
+
+        
 
     def unfav_song(self):
         params = self.get_params('u')
         params['sid'] = self.cur_song['sid']
         params['aid'] = self.cur_song['sid']
         result = self.communicate(params)
+        self.cur_song['like']=0
         self.deal_new_songlist(result['song'])
 
     #next song
@@ -194,13 +198,16 @@ class DoubanCLI(object):
             for r in self.songlist:
                 if None == self.cur_song :
                     self.cur_song = r
-                    break
-                if (self.cur_song != r):
+                    return
+                if (self.cur_song['sid'] != r['sid']):
                     continue
                 else:
                     self.cur_song = None
+            #not find
             if(None == self.cur_song):
                 self.get_playlist()
+            else:
+                self.cur_song = self.songlist[0]
 
     #delete song
     def del_song(self):
@@ -262,10 +269,13 @@ def main(argv):
         doubancli.show_cur_song()
     elif ("fav_song" == cmd):
         doubancli.fav_song()
+        doubancli.show_cur_song()
     elif ("unfav_song" == cmd):
         doubancli.unfav_song()
+        doubancli.show_cur_song()
     elif ("del_song" == cmd):
         doubancli.del_song()
+        doubancli.show_cur_song()
     elif ("cur_song" == cmd):
         doubancli.show_cur_song()
     elif ('set_auth' == cmd):

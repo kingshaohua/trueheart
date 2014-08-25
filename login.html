@@ -72,6 +72,7 @@ function login(){
         password:$('#password').val(),
         captcha:$('#captcha_value').val()},
         function(data){
+            alert(data)
             var json_data=$.parseJSON(data);
             if(0 != json_data['code']){
                 //login failed.
