@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Cubism Page Template</title>
+
+        <!-- Import Cubism and its dependency D3 -->
+        <script type="text/javascript" src="js/plugins/d3.min.js"></script>
+        <script type="text/javascript" src="js/plugins/cubism.v1.min.js"></script>
+        <script src="js/jquery-1.11.0.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+
+    <body>
+        <div id="demo"></div>
+<!--
+        <script type="text/javascript">
+            var context = cubism.context()
+                                .step(1e3) // Distance between data points in milliseconds
+                                .size(400) // Number of data points
+                                .stop();   // Fetching from a static data source; don't update values
+
+            context.constant(0)
+
+            d3.select("body").append("div") // Add a vertical rule
+              .attr("class", "rule")        // to the graph
+              .call(context.rule());
+
+            function stock(name) { 
+                return context.metric(function(start, stop, step, callback) {
+                    //alert(start+' '+stop+' '+step);
+                    d3.json("bins/" + name + ".txt", function(rows) {
+                         //alert(name+rows);
+                        var compare = rows[0][1], value = rows[0][1], values = [value];
+                        
+                        // Creates an array of the price differences throughout the day
+                        rows.forEach(function(d) {
+                            values.push(value = (d[1] - compare) / compare);
+                        }); 
+                    callback(null, values); }); 
+                }, name); 
+            }
+
+
+            function draw_graph(stocks_list) {
+                d3.select("#demo")                 // Select the div on which we want to act           
+                  .selectAll(".axis")              // This is a standard D3 mechanism to
+                  .data(["top"])                   // bind data to a graph. In this case
+                  .enter()                         // we're binding the axes "top" and "bottom".
+                  .append("div")                   // Create two divs and 
+                  .attr("class", function(d) {     // give them the classes
+                    return d + " axis";            // top axis and bottom axis
+                  })                               // respectively 
+                  .each(function(d) {              // For each of these axes,
+                    d3.select(this)                // draw the axes with 4 intervals
+                      .call(context.axis()         // and place them in their proper places
+                      .ticks(4).orient(d)); 
+                  });
+
+
+                d3.select("#demo")                 
+                  .selectAll(".horizon")           
+                  .data(stocks_list.map(stock))    
+                  .enter()                         
+                  .insert("div", ".bottom")        // Insert the graph in a div  
+                  .attr("class", "horizon")        // Turn the div into
+                  .call(context.horizon()          // a horizon graph
+                  .format(d3.format("+,.2p")));    // Format the values to 2 floating-point decimals
+
+
+                context.on("focus", function(i) {
+                    d3.selectAll(".value").style("right",                  // Make the rule coincide 
+                        i == null ? null : context.size() - i + "px"); // with the mouse
+                });
+            } 
+
+            draw_graph(["a", "b", "c"]);
+        </script>
+        -->
+
+
+        <script>
+var context = cubism.context()
+    .step(1e2)
+    .size(600)
+    .stop()
+
+context.scale.domain([new Date(2014,1,1,1,0,0),new Date(2014,1,1,1,0,60)])
+
+d3.select("body").selectAll(".axis")
+    .data(["top"])
+    .enter().append("div")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(context.axis()
+            .ticks(2)
+            .orient(d)
+            .tickFormat(d3.time.format("%M:%S.%L"))
+            .focusFormat(d3.time.format("%M:%S.%L"))
+            )});
+
+
+    //.tickFormat(d3.time.format("%I:%M")
+
+d3.select("body").append("div")
+    .attr("class", "rule")
+    .call(context.rule());
+
+d3.select("body").selectAll(".horizon")
+    .data(['x','y','z'].map(random))
+    .enter().insert("div", ".bottom")
+    .attr("class", "horizon")
+    .call(context.horizon().extent([-10, 10]));
+
+context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : context.size() -i + "px");
+});
+
+// Replace this with context.graphite and graphite.metric!
+function random(x) {
+  var value = 0,
+      values = [],
+      i = 0,
+      last;
+
+ return context.metric(function(start, stop, step, callback) {
+                    //alert(start+' '+stop+' '+step);
+                    d3.json("bins/abc/" + x + ".txt", function(data) {
+                      rows=(""+data).split(','); 
+                      //alert(rows)
+                      /*
+                         //alert(name+rows);
+                        var compare = rows[0][1], value = rows[0][1], values = [value];
+                        
+                        // Creates an array of the price differences throughout the day
+                        rows.forEach(function(d) {
+                            values.push(value = (d[1] - compare) / compare);
+                        }); 
+                    */
+                    callback(null, rows); }); 
+                }, x); 
+/*
+  return context.metric(function(start, stop, step, callback) {
+    //alert(start+' '+stop+' '+step);
+    start = +start, stop = +stop;
+    if (isNaN(last)) last = start;
+    while (last < stop) {
+      last += step;
+      value = Math.max(-10, Math.min(10, value + .8 * Math.random() - .4 + .2 * Math.cos(i += x * .02)));
+      values.push(value);
+    }
+    callback(null, values = values.slice((start - stop) / step));
+  }, x);
+*/
+}
+
+</script>
+
+    </body>
+</html>

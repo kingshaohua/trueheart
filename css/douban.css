@@ -115,10 +115,11 @@ body,.main{
 	background:#FFF;
 	z-index:4;}	
 .musicplay{
-	position:fixed;
+	/*position:fixed;*/
 	z-index:4;
+	margin-top: 10px;
 	top:90px;
-	margin-left:390px;
+	margin-left:10px;
 	width:510px;
 	height:245px;
 	box-shadow:0 0 20px rgba(0, 0, 0, 0.2);
