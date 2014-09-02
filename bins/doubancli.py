@@ -1,7 +1,9 @@
 import sys,os,time,thread,ConfigParser,traceback,random
-import urllib2,json,urllib
+import urllib2,json,urllib,subprocess
 import cookielib
 import logging
+import sensorcli
+
 
 class DoubanCLI(object):
     def __init__(self):
@@ -11,6 +13,8 @@ class DoubanCLI(object):
         self.opener = self.get_opener()
         self.load_config()
         self.channel = 0
+        self.ck=""
+        self.uid=""
         
 
     def init_log(self):
@@ -126,22 +130,21 @@ class DoubanCLI(object):
                 self.show_result(0,self.user_info)
 
         except Exception,e:
-            print traceback.format_exc()
+            logging.error(traceback.format_exc())
 
     def logout(self):
         logging.debug('logout...')
         try:
             response = self.opener.open(
-                urllib2.Request('http://douban.fm/partner/logout'),
-                urllib.urlencode({
-                      'source': 'radio',
-                      'no_login':'y',
-                       'ck':self.ck
-                      })
+                urllib2.Request('http://douban.fm/partner/logout?source=radio&ck=aM21&no_login=y')
                       ).read()
+            #logging.debug(response)
             self.user_info=""
+            self.cookie.clear()
+            os.remove(self.cookiefile)
+            self.show_result(0,'ok')
         except Exception,e:
-            print traceback.format_exc()
+            logging.error(traceback.format_exc()) 
 
     def get_params(self,typename=None):
         params = {}
@@ -154,9 +157,12 @@ class DoubanCLI(object):
         return params
 
     def communicate(self,params):
-        data = urllib.urlencode(params)
-        logging.debug('data='+data)
-        return json.loads(self.opener.open(urllib2.Request('http://douban.fm/j/mine/playlist?'+data)).read())
+        try:
+            data = urllib.urlencode(params)
+            logging.debug('data='+data)
+            return json.loads(self.opener.open(urllib2.Request('http://douban.fm/j/mine/playlist?'+data)).read())
+        except Exception,e:
+            logging.error(traceback.format_exc()) 
 
     def get_playlist(self):
         logging.debug('Fetching playlist ...')
@@ -252,6 +258,21 @@ class DoubanCLI(object):
         else:
             self.show_result(0,'alreay login.')
 
+    def play_song(self):
+        logging.debug('play_song:'+json.dumps(self.cur_song))
+        #kill other play song process,sensor record process
+        
+        #start play song
+
+        #start sensor record.
+        mysensor = sensorcli.SensorCLI()
+        mysensor.moni_data(self.cur_song['sid'],self.cur_song['length'])
+
+    def start_play_process(self):
+        logging.debug('start_play_process.')
+        subprocess.Popen('python doubancli.py play_song')
+
+
 def main(argv):
     doubancli=DoubanCLI()
     cmd=argv[1]
@@ -282,6 +303,10 @@ def main(argv):
         doubancli.set_auth(argv[2],argv[3],argv[4])
     elif ('is_login' == cmd):
         doubancli.is_login()
+    elif ('play_song' == cmd):
+        doubancli.play_song()
+    elif ('start_play_process' == cmd):
+        doubancli.start_play_process()
     else:
         print "no such cmd:"+cmd
 

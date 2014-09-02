@@ -119,7 +119,6 @@
                     $("#favred").addClass('favred left');
                 }
             }
-
             function show_song(data){
 
                 /*{"album": "/subject/2209331/", "picture": "http://img3.douban.com/lpic/s2706835.jpg", "ssid": "bbb7", "artist": "Alison Krauss / Robert Plant", "url": "http://mr4.douban.com/201408251121/18638c0aeb16ff7f6921f4fd9f06b601/view/song/small/p549891.mp4", "company": "Rounder Records", "title": "Sister Rosetta Goes Before Us", "rating_avg": 4.09487, "public_time": "2007", "like": 0, "subtype": "", "length": 205, "sid": "549891", "aid": "2209331", "sha256": "a42aeaee2586a160fbfd4817b8aea12339ed5e3aca7a1a2e34abc7ff64886e17", "kbps": "64", "albumtitle": "Raising Sand", "songlists_count": 27}*/
@@ -131,6 +130,18 @@
                 $('.timeshow').html('-'+Math.floor(Number(data['length'])/60)+':'+Number(data['length'])%60);
                 show_red(data['like']);
                 gCurSong=data;
+            }
+            function logout(){
+                $.post("bins/douban.php",{action:"logout"},
+                    function(data){
+                        var json_data=$.parseJSON(data);
+                        if(0 != json_data['code']){
+                            //failed.
+                            alert(json_data['data']);
+                        }else{
+                            location.href = "login.html"; 
+                        }
+                    });
             }
             </script>
 <script type="text/javascript">
@@ -244,7 +255,7 @@ $(function() {
                             <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
                             </li>
                             <li class="divider"></li>
-                            <li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                            <li><a href="javascript:void(0);" onclick="logout()"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
                             </li>
                         </ul>
                         <!-- /.dropdown-user -->

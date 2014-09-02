@@ -43,14 +43,30 @@
 </head>
 <script type="text/javascript">
 $(document).ready(function(){
+
+    $.post("bins/douban.php",{action:"is_login"},
+            function(data){
+                var json_data=$.parseJSON(data);
+                if(0 == json_data['code']){
+                    //login
+                    location.href = "index.html"; 
+                }else{
+                    init();
+                }
+        });
+
+
+})
+
+function init(){
     refresh_captcha();
     $('#captcha').click(function() {
         refresh_captcha();
     });
     $('#login').click(function(){
         login();
-    });
-})
+    }); 
+}
 
 function refresh_captcha(){
     $.post("bins/douban.php",{action:"get_captcha"},
@@ -72,7 +88,6 @@ function login(){
         password:$('#password').val(),
         captcha:$('#captcha_value').val()},
         function(data){
-            alert(data)
             var json_data=$.parseJSON(data);
             if(0 != json_data['code']){
                 //login failed.
