@@ -26,7 +26,7 @@
                 break;
         }
     } catch (Exception $e) {
-        echo $e->getMessage();
+        echo "{exception:".$e->getMessage()."}";
     }
 
 ?>

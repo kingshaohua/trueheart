@@ -52,14 +52,15 @@
                 });
 
                 $.post("bins/douban.php",{action:"is_login"},
-                    function(data){
-                        var json_data=$.parseJSON(data);
+                    function(data, textStatus,  jqXHR){
+                        var json_data=$.parseJSON(data );
                         if(0 != json_data['code']){
                             //no login
                             location.href = "login.html"; 
                         }else{
                             //login
                             skip_song();
+                            refresh_sensor_data();
                         }
                     });
             })
@@ -146,13 +147,13 @@
             </script>
 <script type="text/javascript">
 function refresh_sensor_data(){
-    $.post("bins/sensor.php",{action:"get_data",songname:"abc",startmsec:"0",endmsec:"100000000"},
-                function(data){
+    $.post("bins/sensor.php",{action:"get_data",songname:"notlike",startmsec:"0",endmsec:"100000000"},
+                function(data, textStatus,  jqXHR){
+                    //alert(data);
                     var json_data=$.parseJSON(data);
                     if(0 != json_data['code']){
                         alert(json_data['data'])
                     }else{
-                        //login
                         chart = $('#container').highcharts();
                         time = (new Date(2014,1,1,0,0,0)).getTime();
                         interval=json_data['data']['interval'];
@@ -169,7 +170,8 @@ function refresh_sensor_data(){
                 });
 }
  $(document).ready(function(){
-     setInterval("refresh_sensor_data()",1000);
+    //refresh_sensor_data();
+    // setInterval("refresh_sensor_data()",1000);
  });  
 
 </script>

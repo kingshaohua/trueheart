@@ -2,7 +2,6 @@ import sys,os,time,thread,ConfigParser,traceback,random
 import urllib2,json,urllib,subprocess
 import cookielib
 import logging
-import sensorcli
 
 
 class DoubanCLI(object):
@@ -265,8 +264,8 @@ class DoubanCLI(object):
         #start play song
 
         #start sensor record.
-        mysensor = sensorcli.SensorCLI()
-        mysensor.moni_data(self.cur_song['sid'],self.cur_song['length'])
+        #mysensor = sensorcli.SensorCLI()
+        #mysensor.moni_data(self.cur_song['sid'],self.cur_song['length'])
 
     def start_play_process(self):
         logging.debug('start_play_process.')
