@@ -1,0 +1,110 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <title>Show Sensor</title>
+
+        <style type="text/css">
+        ${demo.css}
+        </style>
+
+            <script src="js/jquery-1.11.0.js"></script>
+            <script src="js/highstock.js"></script>
+            <script src="js/modules/exporting.js"></script>
+
+           
+<script type="text/javascript">
+function refresh_sensor_data(){
+    $.post("sensor_data/sensor_data/like.data",{},
+                function(data, textStatus,  jqXHR){
+                    //alert(data);
+                    var json_data=$.parseJSON(data);
+                        chart = $('#container').highcharts();
+                        time = (new Date(2014,1,1,0,0,0)).getTime();
+                        interval=json_data['interval'];
+                        chartdata=[[],[],[]];
+                        $.each(json_data['sample'],function(n,value){
+                            chartdata[0].push([time+interval*n,value[0]])
+                            chartdata[1].push([time+interval*n,value[1]])
+                            chartdata[2].push([time+interval*n,value[2]])
+                        });
+                        chart.series[0].setData(chartdata[0]);
+                        chart.series[1].setData(chartdata[1]);
+                        chart.series[2].setData(chartdata[2]);
+                });
+}
+ $(document).ready(function(){
+    refresh_sensor_data();
+    // setInterval("refresh_sensor_data()",1000);
+ });  
+
+</script>
+
+<script type="text/javascript">
+$(function() {
+    
+    Highcharts.setOptions({
+        global : {
+            useUTC : false
+        }
+    });
+    
+    // Create the chart
+    $('#container').highcharts('StockChart', {
+        chart : {
+        },
+        
+        rangeSelector: {
+            buttons: [{
+                count: 1,
+                type: 'second',
+                text: '1S'
+            }, {
+                count: 10,
+                type: 'second',
+                text: '10S'
+            }, {
+                type: 'all',
+                text: 'All'
+            }],
+            inputEnabled: false,
+            selected: 0
+        },
+        
+        title : {
+            text : 'Sensor data'
+        },
+        
+        exporting: {
+            enabled: false
+        },
+        series : [{
+            name : 'X'
+        },{
+            name : 'Y'
+        },{
+            name : 'Z'
+        }]
+    });
+
+});
+
+        </script>
+    </head>
+
+    <body>
+
+
+                    <div id="container" style="min-width: 310px; height: 300px;"></div>
+       
+
+    </body>
+
+    </html>
