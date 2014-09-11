@@ -2,7 +2,10 @@ import sys,os,time,thread,ConfigParser,traceback,random
 import urllib2,json,urllib,subprocess
 import cookielib
 import logging
-
+import pygst
+pygst.require("0.10")
+import gst
+import signal
 
 class DoubanCLI(object):
     def __init__(self):
@@ -260,16 +263,51 @@ class DoubanCLI(object):
     def play_song(self):
         logging.debug('play_song:'+json.dumps(self.cur_song))
         #kill other play song process,sensor record process
-        
-        #start play song
 
+        if os.path.exists('./play_song.pid'):
+            fp = open('./play_song.pid','r')
+            old_pid = fp.read()
+            logging.debug("kill pid "+ old_pid)
+            os.kill(int(old_pid),signal.SIGTERM)
+            fp.close()
+        fp=open('./play_song.pid','w')
+        fp.write(str(os.getpid()))
+        fp.close()
+        #start play song
+        self.player = gst.element_factory_make("playbin", "player")
+        bus = self.player.get_bus()
+        bus.add_signal_watch()
+        bus.connect("message", self.on_message)
+        print 'start play song:'+self.cur_song['title']
+        self.player.set_property("uri", self.cur_song['url']) # when ads, flv, warning print
+        self.player.set_state(gst.STATE_PLAYING)
+        while True:
+            time.sleep(10)
         #start sensor record.
         #mysensor = sensorcli.SensorCLI()
         #mysensor.moni_data(self.cur_song['sid'],self.cur_song['length'])
 
+    def on_message(self, bus, message):
+        t = message.type
+        if t == gst.MESSAGE_EOS:
+            self.player.set_state(gst.STATE_NULL)
+            self.playmode = False
+        elif t == gst.MESSAGE_ERROR:
+            self.player.set_state(gst.STATE_NULL)
+            err, debug = message.parse_error()
+            print "Error: %s" % err, debug
+            self.playmode = False
+
     def start_play_process(self):
         logging.debug('start_play_process.')
-        subprocess.Popen('python doubancli.py play_song')
+        try:
+            pid = os.fork()
+            if pid == 0:
+                self.play_song()
+            else:
+                logging.debug('start_play_process ok.')
+        except OSError,e:
+            logging.error(traceback.format_exc()) 
 
 
 def main(argv):
