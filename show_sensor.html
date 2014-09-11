@@ -22,13 +22,14 @@
            
 <script type="text/javascript">
 function refresh_sensor_data(){
-    $.post("sensor_data/sensor_data/like.data",{},
+    $.post("sensor_data/sensor_data/close.data",{},
                 function(data, textStatus,  jqXHR){
                     //alert(data);
                     var json_data=$.parseJSON(data);
                         chart = $('#container').highcharts();
                         time = (new Date(2014,1,1,0,0,0)).getTime();
                         interval=json_data['interval'];
+                        alert(json_data['sample'].length)
                         chartdata=[[],[],[]];
                         $.each(json_data['sample'],function(n,value){
                             chartdata[0].push([time+interval*n,value[0]])
@@ -67,9 +68,9 @@ $(function() {
                 type: 'second',
                 text: '1S'
             }, {
-                count: 10,
+                count: 5,
                 type: 'second',
-                text: '10S'
+                text: '5S'
             }, {
                 type: 'all',
                 text: 'All'

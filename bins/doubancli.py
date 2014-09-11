@@ -268,7 +268,10 @@ class DoubanCLI(object):
             fp = open('./play_song.pid','r')
             old_pid = fp.read()
             logging.debug("kill pid "+ old_pid)
-            os.kill(int(old_pid),signal.SIGTERM)
+            try:
+                os.kill(int(old_pid),signal.SIGTERM)
+            except Exception,e:
+                pass
             fp.close()
         fp=open('./play_song.pid','w')
         fp.write(str(os.getpid()))
@@ -278,7 +281,7 @@ class DoubanCLI(object):
         bus = self.player.get_bus()
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
-        print 'start play song:'+self.cur_song['title']
+        print 'start play song:'+self.cur_song['title']+"url="+ self.cur_song['url']
         self.player.set_property("uri", self.cur_song['url']) # when ads, flv, warning print
         self.player.set_state(gst.STATE_PLAYING)
         while True:
