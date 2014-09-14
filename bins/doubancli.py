@@ -263,16 +263,7 @@ class DoubanCLI(object):
     def play_song(self):
         logging.debug('play_song:'+json.dumps(self.cur_song))
         #kill other play song process,sensor record process
-
-        if os.path.exists('./play_song.pid'):
-            fp = open('./play_song.pid','r')
-            old_pid = fp.read()
-            logging.debug("kill pid "+ old_pid)
-            try:
-                os.kill(int(old_pid),signal.SIGTERM)
-            except Exception,e:
-                pass
-            fp.close()
+        self.stop_play_process()
         fp=open('./play_song.pid','w')
         fp.write(str(os.getpid()))
         fp.close()
@@ -300,6 +291,17 @@ class DoubanCLI(object):
             err, debug = message.parse_error()
             print "Error: %s" % err, debug
             self.playmode = False
+
+    def stop_play_process(self):
+         if os.path.exists('./play_song.pid'):
+            fp = open('./play_song.pid','r')
+            old_pid = fp.read()
+            logging.debug("kill pid "+ old_pid)
+            try:
+                os.kill(int(old_pid),signal.SIGTERM)
+            except Exception,e:
+                pass
+            fp.close()
 
     def start_play_process(self):
         logging.debug('start_play_process.')
@@ -347,6 +349,8 @@ def main(argv):
         doubancli.play_song()
     elif ('start_play_process' == cmd):
         doubancli.start_play_process()
+    elif ('stop_play_process' == cmd):
+        doubancli.stop_play_process()
     else:
         print "no such cmd:"+cmd
 
