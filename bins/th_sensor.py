@@ -1,4 +1,4 @@
-import sys,os,random,time,json,traceback
+import sys,os,random,time,json,traceback,configparser
 from i2clibraries import i2c_adxl345
 import psutil
 import logging
@@ -20,6 +20,10 @@ class SensorThread(threading.Thread):
         self.adxl345 = i2c_adxl345.i2c_adxl345(1)
         self.adxl345.setScale(2)
 
+        filepath=os.path.join(os.getcwd(),'sensor_data')
+        if (False == os.path.exists(filepath)):
+            os.makedirs(filepath)
+
     def init_log(self):
         try:
             logging.basicConfig(filename = os.path.join(os.getcwd(),'mylog_sensor.txt'), level = logging.DEBUG,
@@ -32,31 +36,49 @@ class SensorThread(threading.Thread):
         self.analyse()
         logging.debug("finish analyse")
 
-    def set_song(self,songname):
-        self.cur_song=songname
+    def set_song(self,song):
+        logging.debug('new cur_song='+json.dumps(song))
+        self.cur_song=song
 
     def analyse(self):
         while True:
             self.get_data(self.rangeSecond)
             self.check_start_stop()
             if self.is_playing():
-                if self.check_fav():
-                    continue
+                self.record_sensor()
                 if self.check_skip():
                     continue
-                
+                if self.check_fav():
+                    continue
+
+    def write_data(self,songid,data):
+        filename=self.get_data_file(songid) 
+        fp = open(filename,'w')
+        fp.write(json.dumps(data))
+        fp.close()
+
+    def get_data_file(self,songid):
+        return os.path.join(os.path.join(os.getcwd(),'sensor_data'),songid+'.data')
+
+    def record_sensor(self):
+        data={}
+        data['song']=self.cur_song
+        data['interval'] = int(1000/self.sample_HZ)
+        data['sample'] = self.rangeData[0:self.sample_HZ]
+        self.write_data(self.cur_song['sid'],data)
             #print(self.rangeData)
     def is_fav(self):
         timeline=self.get_timeline_YZ()
         if(len(timeline)  < 16):
             return False
         timeline=list(set(timeline))
-        if(len(timeline) > 4 ):
+        if(len(timeline) >= 4 ):
             return False
         #logging.debug('is_fav:'+(',').join(timeline))
         if('Y_UP' not in timeline or 'Y_DOWN' not in timeline):
             return False
         else:
+            logging.debug('fav='+(',').join(timeline))
             return True
 
     def is_skip(self):
@@ -66,6 +88,7 @@ class SensorThread(threading.Thread):
         timeline_str=(',').join(timeline)
         match_str="Y_UP,Y_DOWN,Y=Z,Z_DOWN,Z_UP,Z_DOWN,Y=Z,Y_DOWN"*1
         if(timeline_str.find(match_str) >=0):
+            logging.debug('skip='+timeline_str)
             return True
         else:
             return False
@@ -98,7 +121,11 @@ class SensorThread(threading.Thread):
     def check_fav(self):
         if self.is_fav():
             logging.debug('fav song')
-            os.system('python doubancli.py fav_song')
+            if 1 == int(self.cur_song['like']):
+                logging.debug('already like')
+            else:
+                os.system('python doubancli.py fav_song')
+                self.cur_song['like'] = 1
             return True
         else:
             return False
@@ -137,14 +164,9 @@ class SensorThread(threading.Thread):
         for i in range(1,self.rangeSecond):
             cellData=data[i*self.sample_HZ:(i+1)*(self.sample_HZ)]
             if(max(self.get_axis_data(cellData,self.axisY)) > 200 and min(self.get_axis_data(cellData,self.axisY))>200):
-                #print('max='+str(max(self.get_axis_data(cellData,self.axisY))))
-                #print('min='+str(min(self.get_axis_data(cellData,self.axisY))))
                 continue
             else:
-                #print('max='+str(max(self.get_axis_data(cellData,self.axisY))))
-                #print('min='+str(min(self.get_axis_data(cellData,self.axisY))))
                 return False
-
         return True
 
         
@@ -192,15 +214,30 @@ class ControlThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
 
+    def set_sensor(self,sensor):
+        self.sensor=sensor
+
     def run(self):
+        before_song = ''
         while True:
-            print('ControlThread')
-            time.sleep(4)
+            config = configparser.ConfigParser()
+            config.read(R"douban.config")
+            cur_song = config.get('data','cur_song')
+            if("" != cur_song):
+                cur_song = json.loads(cur_song)
+                if( before_song != cur_song):
+                    self.sensor.set_song(cur_song)
+                    before_song=cur_song
+
+            time.sleep(3)
 
 def main():
     sensor=SensorThread()
     sensor.start()
-    time.sleep(10000)
-
+    control=ControlThread()
+    control.set_sensor(sensor)
+    control.start()
+    time.sleep(100000)
+    print('finish')
 if __name__=='__main__':
     main()
