@@ -1,4 +1,4 @@
-import sys,os,random,time,json
+import sys,os,random,time,json,traceback
 from i2clibraries import i2c_adxl345
 import psutil
 import logging
@@ -7,6 +7,7 @@ import threading
 class SensorThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self.init_log()
         self.cur_song=""
         self.rangeData=[]
         self.curtime=0
@@ -19,9 +20,17 @@ class SensorThread(threading.Thread):
         self.adxl345 = i2c_adxl345.i2c_adxl345(1)
         self.adxl345.setScale(2)
 
+    def init_log(self):
+        try:
+            logging.basicConfig(filename = os.path.join(os.getcwd(),'mylog_sensor.txt'), level = logging.DEBUG,
+            format='LINE %(lineno)-4d : %(levelname)-8s %(message)s')
+        except Exception(e):
+                print(traceback.format_exc())
+
+
     def run(self):
         self.analyse()
-        print("finish analyse")
+        logging.debug("finish analyse")
 
     def set_song(self,songname):
         self.cur_song=songname
@@ -31,8 +40,10 @@ class SensorThread(threading.Thread):
             self.get_data(self.rangeSecond)
             self.check_start_stop()
             if self.is_playing():
-                self.check_fav()
-                self.check_skip()
+                if self.check_fav():
+                    continue
+                if self.check_skip():
+                    continue
                 
             #print(self.rangeData)
     def is_fav(self):
@@ -40,8 +51,9 @@ class SensorThread(threading.Thread):
         if(len(timeline)  < 16):
             return False
         timeline=list(set(timeline))
-        if(len(timeline) != 2):
+        if(len(timeline) > 4 ):
             return False
+        #logging.debug('is_fav:'+(',').join(timeline))
         if('Y_UP' not in timeline or 'Y_DOWN' not in timeline):
             return False
         else:
@@ -85,19 +97,29 @@ class SensorThread(threading.Thread):
 
     def check_fav(self):
         if self.is_fav():
+            logging.debug('fav song')
             os.system('python doubancli.py fav_song')
+            return True
+        else:
+            return False
 
     def check_skip(self):
         if self.is_skip():
+            logging.debug('skip song')
             os.system('python doubancli.py skip_song')
             os.system('python doubancli.py start_play_process')
             self.rangeData=[]
+            return True
+        else:
+            return False
 
     def check_start_stop(self):
         if(self.is_close(self.rangeData)):
+            logging.debug('in close')
             if True == self.is_playing():
                 os.system('python doubancli.py stop_play_process')
         else:
+            logging.debug('out close')
             if False == self.is_playing():
                 os.system('python doubancli.py start_play_process')
 

@@ -269,28 +269,38 @@ class DoubanCLI(object):
         fp.close()
         #start play song
         self.player = gst.element_factory_make("playbin", "player")
-        bus = self.player.get_bus()
-        bus.add_signal_watch()
-        bus.connect("message", self.on_message)
+        # bus = self.player.get_bus()
+        # bus.add_signal_watch()
+        # bus.connect("message", self.on_message)
         print 'start play song:'+self.cur_song['title']+"url="+ self.cur_song['url']
         self.player.set_property("uri", self.cur_song['url']) # when ads, flv, warning print
         self.player.set_state(gst.STATE_PLAYING)
-        while True:
-            time.sleep(10)
+        #sleep song time
+        for i in range(1,int(self.cur_song['length'])):
+            time.sleep(1)
+        logging.debug('Finish play...')
+        self.skip_song()
+        self.save_config()
+        self.start_play_process()
+        # while True:
+        #     time.sleep(10)
         #start sensor record.
         #mysensor = sensorcli.SensorCLI()
         #mysensor.moni_data(self.cur_song['sid'],self.cur_song['length'])
 
-    def on_message(self, bus, message):
-        t = message.type
-        if t == gst.MESSAGE_EOS:
-            self.player.set_state(gst.STATE_NULL)
-            self.playmode = False
-        elif t == gst.MESSAGE_ERROR:
-            self.player.set_state(gst.STATE_NULL)
-            err, debug = message.parse_error()
-            print "Error: %s" % err, debug
-            self.playmode = False
+    # def on_message(self, bus, message):
+    #     t = message.type
+    #     if t == gst.MESSAGE_EOS:
+    #         self.player.set_state(gst.STATE_NULL)
+    #         logging.debug( "Finish play....")
+    #         os.system('python doubancli.py skip_song')
+    #         self.start_play_process()
+    #     elif t == gst.MESSAGE_ERROR:
+    #         self.player.set_state(gst.STATE_NULL)
+    #         err, debug = message.parse_error()
+    #         logging.error( "Error: %s" % err, debug)
+    #     else:
+    #         print message
 
     def stop_play_process(self):
          if os.path.exists('./play_song.pid'):
