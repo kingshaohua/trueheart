@@ -8,7 +8,7 @@ class SensorThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.init_log()
-        self.cur_song=""
+        self.cur_song=None
         self.rangeData=[]
         self.curtime=0
         self.rangeSecond=5
@@ -19,6 +19,7 @@ class SensorThread(threading.Thread):
         self.sample_HZ=100
         self.adxl345 = i2c_adxl345.i2c_adxl345(1)
         self.adxl345.setScale(2)
+        self.song_sensor_data=None
 
         filepath=os.path.join(os.getcwd(),'sensor_data')
         if (False == os.path.exists(filepath)):
@@ -39,6 +40,7 @@ class SensorThread(threading.Thread):
     def set_song(self,song):
         logging.debug('new cur_song='+json.dumps(song))
         self.cur_song=song
+        os.system('python doubancli.py stop_play_process')
 
     def analyse(self):
         while True:
@@ -61,11 +63,15 @@ class SensorThread(threading.Thread):
         return os.path.join(os.path.join(os.getcwd(),'sensor_data'),songid+'.data')
 
     def record_sensor(self):
-        data={}
-        data['song']=self.cur_song
-        data['interval'] = int(1000/self.sample_HZ)
-        data['sample'] = self.rangeData[0:self.sample_HZ]
-        self.write_data(self.cur_song['sid'],data)
+        if None == self.song_sensor_data or self.song_sensor_data['song']['sid'] != self.cur_song['sid'] :    
+            self.song_sensor_data={}
+            self.song_sensor_data['song']=self.cur_song
+            self.song_sensor_data['interval'] = int(1000/self.sample_HZ)
+            self.song_sensor_data['sample'] = []
+        else:
+            self.song_sensor_data['sample'] += self.rangeData[0:self.sample_HZ]
+
+        self.write_data(self.cur_song['sid'],self.song_sensor_data)
             #print(self.rangeData)
     def is_fav(self):
         timeline=self.get_timeline_YZ()
@@ -142,11 +148,11 @@ class SensorThread(threading.Thread):
 
     def check_start_stop(self):
         if(self.is_close(self.rangeData)):
-            logging.debug('in close')
+            #logging.debug('in close')
             if True == self.is_playing():
                 os.system('python doubancli.py stop_play_process')
         else:
-            logging.debug('out close')
+            #logging.debug('out close')
             if False == self.is_playing():
                 os.system('python doubancli.py start_play_process')
 
@@ -220,16 +226,19 @@ class ControlThread(threading.Thread):
     def run(self):
         before_song = ''
         while True:
-            config = configparser.ConfigParser()
-            config.read(R"douban.config")
-            cur_song = config.get('data','cur_song')
-            if("" != cur_song):
-                cur_song = json.loads(cur_song)
-                if( before_song != cur_song):
-                    self.sensor.set_song(cur_song)
-                    before_song=cur_song
-
-            time.sleep(3)
+            try:
+                config = configparser.ConfigParser()
+                config.read(R"douban.config")
+                cur_song = config.get('data','cur_song')
+                if("" != cur_song):
+                    cur_song = json.loads(cur_song)
+                    if( '' == before_song or before_song['sid'] != cur_song['sid']):
+                        self.sensor.set_song(cur_song)
+                        before_song=cur_song
+            except Exception(e):
+                logging.debug(traceback.format_exc())
+                
+            time.sleep(2)
 
 def main():
     sensor=SensorThread()

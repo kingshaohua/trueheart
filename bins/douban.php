@@ -10,6 +10,7 @@
             case 'unfav_song':
             case 'del_song':
             case 'logout':
+            case 'cur_song':
                 exec($doubancli.$action,$out,$states);
                 print $out[0];
                 break;

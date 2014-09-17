@@ -1,5 +1,4 @@
 import sys,os,random,time,json
-# from i2clibraries import i2c_adxl345
 import logging
 
 class SensorCLI():
@@ -11,20 +10,6 @@ class SensorCLI():
         logging.basicConfig(filename = os.path.join(os.getcwd(),'mylog.txt'), level = logging.DEBUG,
             format='LINE %(lineno)-4d : %(levelname)-8s %(message)s')
         
-    def start_record(self,songname,songtime):
-        data={}
-        # data['interval'] = self.sample_interval
-        # data['sample'] = []
-        # adxl345 = i2c_adxl345.i2c_adxl345(1)
-        # adxl345.setScale(2)
-        # for t in range(int(int(songtime)*1000/self.sample_interval)):
-        #     (x,y,z) = adxl345.getRawAxes()
-        #     data['sample'].append([x,y,z])
-        #     # if(len(data['sample'])%100 == 0):
-        #     #     self.write_data(songname,data)
-        #     time.sleep(0.01)
-        # self.write_data(songname,data)
-
     def moni_data(self,songname,songtime):
         filepath=os.path.join(os.getcwd(),'sensor_data')
         if (False == os.path.exists(filepath)):
@@ -46,18 +31,21 @@ class SensorCLI():
         fp.write(json.dumps(data))
         fp.close()
 
-    def get_data_file(self,songname):
-        return os.path.join(os.path.join(os.getcwd(),'sensor_data'),songname+'.data')
+    def get_data_file(self,songid):
+        return os.path.join(os.path.join(os.getcwd(),'sensor_data'),songid+'.data')
 
     #get sensor data
-    def get_data(self,songname,startmsec,endmsec):
-        filename=self.get_data_file(songname) 
-        fp = open(filename,'r')
-        data=json.loads(fp.read())
-        startIndex=int(startmsec)/int(data['interval'])
-        endIndex=int(endmsec)/int(data['interval'])
-        data['sample']=data['sample'][int(startIndex):int(endIndex)]
-        self.show_result(0,data)
+    def get_data(self,songid,startmsec,endmsec):
+        filename=self.get_data_file(songid) 
+        if(os.path.exists(filename)):
+            fp = open(filename,'r')
+            data=json.loads(fp.read())
+            startIndex=int(startmsec)/int(data['interval'])
+            endIndex=int(endmsec)/int(data['interval'])
+            data['sample']=data['sample'][int(startIndex):int(endIndex)]
+            self.show_result(0,data)
+        else:
+            self.show_result(-1,"no data")
 
     def show_result(self,code,data):
         obj={}

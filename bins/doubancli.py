@@ -1,4 +1,4 @@
-import sys,os,time,thread,ConfigParser,traceback,random
+import sys,os,time,thread,ConfigParser,traceback,random,stat
 import urllib2,json,urllib,subprocess
 import cookielib
 import logging
@@ -17,7 +17,19 @@ class DoubanCLI(object):
         self.channel = 0
         self.ck=""
         self.uid=""
+        self.chmod_files()
         
+    def chmod_files(self):
+        try:
+            path_list=[
+                    os.path.join(os.getcwd(),'mylog.txt'),
+                    os.path.join(os.getcwd(),self.cookiefile)
+                    ]
+            for item in path_list:        
+                if os.path.exists(item):
+                    os.chmod(item,stat.S_IRWXU|stat.S_IRWXG)
+        except Exception,e:
+                logging.debug(traceback.format_exc())
 
     def init_log(self):
         try:
@@ -38,6 +50,7 @@ class DoubanCLI(object):
     def __del__(self):
         self.cookie.save(self.cookiefile,ignore_discard=True, ignore_expires=True)
         self.save_config()
+        self.chmod_files()
         
 
 

@@ -79,7 +79,7 @@
                             alert(json_data['data']);
                         }else{
                             //success
-                            alert(actionStr +' success');
+                            //alert(actionStr +' success');
                             show_song(json_data['data'])
                         }
                     });
@@ -93,7 +93,7 @@
                             alert(json_data['data']);
                         }else{
                             //success
-                            alert('del song success');
+                            //alert('del song success');
                             show_song(json_data['data'])
                         }
                     });
@@ -106,7 +106,6 @@
                             //failed.
                             alert(json_data['data']);
                         }else{
-                            
                             show_song(json_data['data']);
                         }
                     });
@@ -119,6 +118,19 @@
                 }else{
                     $("#favred").addClass('favred left');
                 }
+            }
+            function get_cur_song(){
+                $.post("bins/douban.php",{action:"cur_song"},
+                        function(data, textStatus,  jqXHR){
+                            var json_data=$.parseJSON(data);
+                            if(0 != json_data['code']){
+                                //failed.
+                                alert(json_data['data']);
+                            }else{
+                                show_song(json_data['data'])
+                            }
+                        });
+
             }
             function show_song(data){
 
@@ -134,7 +146,7 @@
             }
             function logout(){
                 $.post("bins/douban.php",{action:"logout"},
-                    function(data){
+                    function(data, textStatus,  jqXHR){
                         var json_data=$.parseJSON(data);
                         if(0 != json_data['code']){
                             //failed.
@@ -146,18 +158,23 @@
             }
             </script>
 <script type="text/javascript">
+
 function refresh_sensor_data(){
-    $.post("bins/sensor.php",{action:"get_data",songname:"notlike",startmsec:"0",endmsec:"100000000"},
+    if(gCurSong['sid'] == ''){
+        return
+    }
+    $.post("bins/sensor.php",{action:"get_data",songid:gCurSong['sid'],startmsec:"0",endmsec:"100000000"},
                 function(data, textStatus,  jqXHR){
                     //alert(data);
                     var json_data=$.parseJSON(data);
                     if(0 != json_data['code']){
-                        alert(json_data['data'])
+                        //alert(json_data['data'])
                     }else{
                         chart = $('#container').highcharts();
                         time = (new Date(2014,1,1,0,0,0)).getTime();
                         interval=json_data['data']['interval'];
                         chartdata=[[],[],[]];
+                        //alert(json_data['data']['sample'].length);
                         $.each(json_data['data']['sample'],function(n,value){
                             chartdata[0].push([time+interval*n,value[0]])
                             chartdata[1].push([time+interval*n,value[1]])
@@ -170,8 +187,8 @@ function refresh_sensor_data(){
                 });
 }
  $(document).ready(function(){
-    //refresh_sensor_data();
-    // setInterval("refresh_sensor_data()",1000);
+    setInterval("refresh_sensor_data()",3000);
+    setInterval("get_cur_song()",5000);
  });  
 
 </script>
@@ -196,9 +213,9 @@ $(function() {
                 type: 'second',
                 text: '1S'
             }, {
-                count: 10,
+                count: 5,
                 type: 'second',
-                text: '10S'
+                text: '5S'
             }, {
                 type: 'all',
                 text: 'All'
@@ -208,7 +225,7 @@ $(function() {
         },
         
         title : {
-            text : 'Sensor data'
+            text : 'Sensor ADXL345'
         },
         
         exporting: {
