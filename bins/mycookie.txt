@@ -1,8 +1,1 @@
 #LWP-Cookies-2.0
-Set-Cookie3: bid="\"UCIeyO57cC0\""; path="/"; domain=".douban.com"; path_spec; domain_dot; expires="2015-09-02 09:00:31Z"; version=0
-Set-Cookie3: ac="\"1409648431\""; path="/"; domain=".douban.fm"; path_spec; domain_dot; discard; version=0
-Set-Cookie3: bid="\"UCIeyO57cC0\""; path="/"; domain=".douban.fm"; path_spec; domain_dot; expires="2015-09-02 09:00:31Z"; version=0
-Set-Cookie3: ck="\"SnFp\""; path="/"; domain=".douban.fm"; path_spec; domain_dot; discard; version=0
-Set-Cookie3: dbcl2="\"98729382:I2NGV/ZAEYg\""; path="/"; domain=".douban.fm"; path_spec; domain_dot; discard; httponly=None; version=0
-Set-Cookie3: flag="\"ok\""; path="/"; domain=".douban.fm"; path_spec; domain_dot; discard; version=0
-Set-Cookie3: fmNlogin="\"y\""; path="/"; domain=".douban.fm"; path_spec; domain_dot; expires="2014-10-02 09:01:20Z"; version=0

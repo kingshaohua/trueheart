@@ -21,6 +21,7 @@ class SensorThread(threading.Thread):
         self.adxl345.setScale(2)
         self.song_sensor_data=None
 
+        
         filepath=os.path.join(os.getcwd(),'sensor_data')
         if (False == os.path.exists(filepath)):
             os.makedirs(filepath)
@@ -75,7 +76,8 @@ class SensorThread(threading.Thread):
             #print(self.rangeData)
     def is_fav(self):
         timeline=self.get_timeline_YZ()
-        if(len(timeline)  < 16):
+        logging.debug('test fav:'+(',').join(timeline))
+        if(len(timeline)  < 12):
             return False
         timeline=list(set(timeline))
         if(len(timeline) >= 4 ):
@@ -84,20 +86,31 @@ class SensorThread(threading.Thread):
         if('Y_UP' not in timeline or 'Y_DOWN' not in timeline):
             return False
         else:
-            logging.debug('fav='+(',').join(timeline))
+            logging.debug('fav=true')
             return True
 
     def is_skip(self):
         timeline=self.get_timeline_YZ()
-        if(len(timeline) < 40):
+        logging.debug('test skip:'+(',').join(timeline))
+        if(len(timeline) < 22
+            ):
             return False
-        timeline_str=(',').join(timeline)
-        match_str="Y_UP,Y_DOWN,Y=Z,Z_DOWN,Z_UP,Z_DOWN,Y=Z,Y_DOWN"*1
-        if(timeline_str.find(match_str) >=0):
-            logging.debug('skip='+timeline_str)
-            return True
+
+        if('Y_UP' not in timeline or 'Y_DOWN' not in timeline or 'Y=Z' not in timeline or 'Z_DOWN' not in timeline or 'Z_UP' not in timeline):
+            return False
         else:
-            return False
+            logging.debug('skip=true')
+            return True
+
+
+        # timeline_str=(',').join(timeline)
+        # match_str_1="Y_UP,Y_DOWN,Y=Z,Z_DOWN,Z_UP,Z_DOWN,Y=Z,Y_DOWN"*1
+        # match_str_1="Y_UP,Y_DOWN,Y=Z,Z_DOWN,Z_UP,Z_DOWN,Y=Z,Y_DOWN"*1
+        # if(timeline_str.find(match_str) >=0):
+        #     logging.debug('skip=true')
+        #     return True
+        # else:
+        #     return False
 
     def get_timeline_YZ(self):
         axisdata=[]
@@ -107,13 +120,13 @@ class SensorThread(threading.Thread):
             flag = ''
             if( YZ_diff < 10 and YZ_diff > -10):
                 flag='Y=Z'
-            elif (YZ_diff > 50):
+            elif (YZ_diff > 90):
                 flag='Y_UP'
-            elif (YZ_diff < 50 and YZ_diff > 10):
+            elif (YZ_diff < 65 and YZ_diff > 40):
                 flag='Y_DOWN'
-            elif (YZ_diff < -50):
+            elif (YZ_diff < -80 ):
                 flag='Z_UP'
-            elif (YZ_diff > -50 and YZ_diff < -10):
+            elif (YZ_diff > -65 and YZ_diff < -40):
                 flag='Z_DOWN'
 
             if ''==flag:
@@ -148,12 +161,14 @@ class SensorThread(threading.Thread):
 
     def check_start_stop(self):
         if(self.is_close(self.rangeData)):
-            #logging.debug('in close')
+            logging.debug('headphone is down')
             if True == self.is_playing():
+                logging.debug('stop play process')
                 os.system('python doubancli.py stop_play_process')
         else:
             #logging.debug('out close')
             if False == self.is_playing():
+                logging.debug('headphone is up')
                 os.system('python doubancli.py start_play_process')
 
     def is_playing(self):
@@ -238,7 +253,7 @@ class ControlThread(threading.Thread):
             except Exception(e):
                 logging.debug(traceback.format_exc())
                 
-            time.sleep(2)
+            time.sleep(3)
 
 def main():
     sensor=SensorThread()
